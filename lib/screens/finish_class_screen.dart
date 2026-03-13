@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/finish_class_record.dart';
@@ -25,6 +26,11 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
   String? _qrValue;
   bool _loadingLocation = false;
   bool _submitting = false;
+  String? _locationMessage;
+  bool _locationDeniedForever = false;
+  bool _locationServiceDisabled = false;
+  String? _cameraMessage;
+  bool _cameraDeniedForever = false;
 
   @override
   void initState() {
@@ -44,31 +50,81 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
       _loadingLocation = true;
     });
 
-    try {
-      final pos = await LocationService.getCurrentPosition();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _position = pos;
-      });
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
+    final result = await LocationService.tryGetCurrentPosition();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _loadingLocation = false;
+      _position = result.position;
+      _locationMessage = result.errorMessage;
+      _locationDeniedForever = result.permissionDeniedForever;
+      _locationServiceDisabled = result.serviceDisabled;
+    });
+
+    if (result.hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location error: $e')),
+        SnackBar(content: Text(result.errorMessage!)),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loadingLocation = false;
-        });
-      }
     }
   }
 
+  Future<bool> _ensureCameraPermission() async {
+    final status = await Permission.camera.status;
+    if (!mounted) {
+      return false;
+    }
+
+    if (status.isGranted) {
+      setState(() {
+        _cameraMessage = null;
+        _cameraDeniedForever = false;
+      });
+      return true;
+    }
+
+    final requested = await Permission.camera.request();
+    if (!mounted) {
+      return false;
+    }
+
+    if (requested.isGranted) {
+      setState(() {
+        _cameraMessage = null;
+        _cameraDeniedForever = false;
+      });
+      return true;
+    }
+
+    setState(() {
+      _cameraDeniedForever = requested.isPermanentlyDenied;
+      _cameraMessage = requested.isPermanentlyDenied
+          ? 'Camera permission is blocked. Open settings to enable scanning.'
+          : 'Camera permission is required to scan QR codes.';
+    });
+
+    return false;
+  }
+
+  Future<void> _openAppSettings() async {
+    await openAppSettings();
+  }
+
+  Future<void> _openLocationSettings() async {
+    await Geolocator.openLocationSettings();
+  }
+
+  Future<void> _openPermissionSettings() async {
+    await Geolocator.openAppSettings();
+  }
+
   Future<void> _scanQr() async {
+    final cameraOk = await _ensureCameraPermission();
+    if (!mounted || !cameraOk) {
+      return;
+    }
+
     final result = await Navigator.push<String>(
       context,
       MaterialPageRoute<String>(
@@ -157,6 +213,43 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
               title: 'Session Capture',
               child: Column(
                 children: [
+                  if (_locationMessage != null) ...[
+                    _PermissionNotice(
+                      icon: Icons.location_off_rounded,
+                      message: _locationMessage!,
+                      tone: const Color(0xFF7C2D12),
+                      background: const Color(0xFFFFEDD5),
+                      actions: [
+                        if (_locationServiceDisabled)
+                          TextButton(
+                            onPressed: _openLocationSettings,
+                            child: const Text('Open Location'),
+                          ),
+                        if (_locationDeniedForever)
+                          TextButton(
+                            onPressed: _openPermissionSettings,
+                            child: const Text('Open Settings'),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (_cameraMessage != null) ...[
+                    _PermissionNotice(
+                      icon: Icons.videocam_off_rounded,
+                      message: _cameraMessage!,
+                      tone: const Color(0xFF1E3A8A),
+                      background: const Color(0xFFDBEAFE),
+                      actions: [
+                        if (_cameraDeniedForever)
+                          TextButton(
+                            onPressed: _openAppSettings,
+                            child: const Text('Open Settings'),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Row(
                     children: [
                       const Icon(Icons.schedule_rounded, size: 18),
@@ -313,6 +406,57 @@ class _SectionCard extends StatelessWidget {
             child,
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PermissionNotice extends StatelessWidget {
+  const _PermissionNotice({
+    required this.icon,
+    required this.message,
+    required this.tone,
+    required this.background,
+    this.actions = const [],
+  });
+
+  final IconData icon;
+  final String message;
+  final Color tone;
+  final Color background;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tone.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: tone, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(color: tone, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          if (actions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(spacing: 6, children: actions),
+            ),
+        ],
       ),
     );
   }
