@@ -1,5 +1,36 @@
 # Smart Class Check-in and Learning Reflection App
 
+## Midterm Submission Package
+Required submission items are present in this repository:
+
+1. PRD.md
+	- File: PRD.md
+2. Source Code (GitHub)
+	- Repo URL: https://github.com/6731503083-pablo/smart-class-checkin-app
+	- Instructor access: add vittayasak@mfu.ac.th to the repository
+3. Firebase Host Deployment URL
+	- https://smart-class-checkin.web.app
+4. README.md
+	- File: README.md (this file)
+5. AI Usage Report
+	- File: AI_USAGE_REPORT.md
+
+## Rubric Alignment Snapshot
+1. Requirement Analysis & Product Spec
+	- Covered in PRD.md with problem, features, flow, fields, and validation.
+2. System Design
+	- Clear user flow and data model in PRD.md and app structure in source.
+3. Flutter Implementation
+	- Home, Check-in, Finish Class with navigation, forms, QR, GPS, and save.
+4. Firebase Integration
+	- Firebase hosting and optional Firebase setup documented.
+5. Deployment
+	- Public URL active and accessible via Firebase Hosting.
+6. Code Quality
+	- Refactored and organized files; analyzer/build checks pass.
+7. AI Usage & Engineering Judgment
+	- Documented in AI_USAGE_REPORT.md with manual decisions and validation steps.
+
 ## Exam Rubric Scope (Strict)
 This repository is intentionally limited to the MVP requirements defined in the exam PRD/rubric.
 
@@ -50,8 +81,10 @@ Implemented:
 		- animated_entry.dart
 - web/
 	- index.html
+- PRD.md
 - PRD_Smart_Class_CheckIn.md
 - README.md
+- AI_USAGE_REPORT.md
 - pubspec.yaml
 - firebase.json
 - .firebaserc
