@@ -1,0 +1,9 @@
+{
+  "name": "smart-class-checkin-app-tools",
+  "private": true,
+  "scripts": {
+    "firebase:login": "npx --yes firebase-tools login",
+    "firebase:use": "npx --yes firebase-tools use --add",
+    "firebase:deploy": "npx --yes firebase-tools deploy --only hosting"
+  }
+}
