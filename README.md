@@ -82,7 +82,6 @@ Implemented:
 - web/
 	- index.html
 - PRD.md
-- PRD_Smart_Class_CheckIn.md
 - README.md
 - AI_USAGE_REPORT.md
 - pubspec.yaml
