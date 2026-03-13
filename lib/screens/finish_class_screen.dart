@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/finish_class_record.dart';
 import '../services/database_service.dart';
+import '../services/firebase_sync_service.dart';
 import '../services/location_service.dart';
 import '../widgets/animated_entry.dart';
 
@@ -196,6 +197,13 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
       );
 
       await DatabaseService.instance.insertFinishClass(record);
+
+      // Keep local save as source of truth; attempt cloud copy when available.
+      try {
+        await FirebaseSyncService.saveFinishClass(record);
+      } catch (_) {
+        // Ignore cloud sync failures so exam-critical local flow stays reliable.
+      }
 
       if (!mounted) {
         return;

@@ -114,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Color(0xFF0F172A),
                   ),
                   children: [
-                    TextSpan(text: 'Welcome back,\n'),
+                    TextSpan(text: 'Welcome back'),
                   ],
                 ),
               ),

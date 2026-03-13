@@ -23,7 +23,7 @@ Required submission items are present in this repository:
 3. Flutter Implementation
 	- Home, Check-in, Finish Class with navigation, forms, QR, GPS, and save.
 4. Firebase Integration
-	- Firebase hosting and optional Firebase setup documented.
+	- Firebase hosting active, and records are optionally written to Firestore when Firebase is configured.
 5. Deployment
 	- Public URL active and accessible via Firebase Hosting.
 6. Code Quality
@@ -59,6 +59,7 @@ Implemented:
 - Check-in (before class): timestamp, GPS, QR scan, previous topic, expected topic, mood (1-5)
 - Finish Class (after class): timestamp, GPS, QR scan, learned today, class feedback
 - Local history on Home screen
+- Optional Firestore mirror save for both flows when Firebase is configured
 - Permission handling UX for location/camera
 - Human-readable location text fallback
 - 12-hour time display (AM/PM)
@@ -125,6 +126,10 @@ Use this quick checklist before submission/demo.
 
 ## Firebase Configuration Notes
 This repository is local-first and works even if Firebase is not configured.
+
+Current behavior:
+- Always saves locally (SQLite/in-memory fallback) to satisfy MVP reliability.
+- Also attempts Firestore write for check-in and finish-class records when Firebase is initialized.
 
 If you want full Firebase integration:
 1. Create a Firebase project.

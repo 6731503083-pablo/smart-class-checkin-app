@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/check_in_record.dart';
 import '../services/database_service.dart';
+import '../services/firebase_sync_service.dart';
 import '../services/location_service.dart';
 import '../widgets/animated_entry.dart';
 
@@ -206,6 +207,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
       );
 
       await DatabaseService.instance.insertCheckIn(record);
+
+      // Keep local save as source of truth; attempt cloud copy when available.
+      try {
+        await FirebaseSyncService.saveCheckIn(record);
+      } catch (_) {
+        // Ignore cloud sync failures so exam-critical local flow stays reliable.
+      }
 
       if (!mounted) {
         return;
