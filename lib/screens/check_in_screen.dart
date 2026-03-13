@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -86,6 +87,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
   }
 
   Future<bool> _ensureCameraPermission() async {
+    if (kIsWeb) {
+      return true;
+    }
+
     final status = await Permission.camera.status;
     if (!mounted) {
       return false;
