@@ -89,14 +89,6 @@ If you want full Firebase integration:
 4. Deploy hosting component:
 
 ```bash
-npm run firebase:login
-npm run firebase:use
-npm run firebase:deploy
-```
-
-If you prefer direct commands without npm scripts:
-
-```bash
 npx --yes firebase-tools login
 npx --yes firebase-tools use --add
 npx --yes firebase-tools deploy --only hosting
