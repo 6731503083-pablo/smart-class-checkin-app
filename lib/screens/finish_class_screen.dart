@@ -167,13 +167,15 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
     }
     if (_position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('GPS location is required before submit.')),
+        const SnackBar(
+            content: Text('GPS location is required before submit.')),
       );
       return;
     }
     if (_qrValue == null || _qrValue!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QR code value is required before submit.')),
+        const SnackBar(
+            content: Text('QR code value is required before submit.')),
       );
       return;
     }
@@ -218,6 +220,185 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
     }
   }
 
+  Widget _buildSessionCaptureCard(String formattedTime) {
+    return _SectionCard(
+      title: 'Session Capture',
+      child: Column(
+        children: [
+          if (_locationMessage != null) ...[
+            _PermissionNotice(
+              icon: Icons.location_off_rounded,
+              message: _locationMessage!,
+              tone: const Color(0xFF7C2D12),
+              background: const Color(0xFFFFEDD5),
+              actions: [
+                if (_locationServiceDisabled)
+                  TextButton(
+                    onPressed: _openLocationSettings,
+                    child: const Text('Open Location'),
+                  ),
+                if (_locationDeniedForever)
+                  TextButton(
+                    onPressed: _openPermissionSettings,
+                    child: const Text('Open Settings'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_cameraMessage != null) ...[
+            _PermissionNotice(
+              icon: Icons.videocam_off_rounded,
+              message: _cameraMessage!,
+              tone: const Color(0xFF1E3A8A),
+              background: const Color(0xFFDBEAFE),
+              actions: [
+                if (_cameraDeniedForever)
+                  TextButton(
+                    onPressed: _openAppSettings,
+                    child: const Text('Open Settings'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              const Icon(Icons.schedule_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                formattedTime,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.place_rounded,
+                  size: 18,
+                  color: Color(0xFF334155),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _position == null
+                      ? 'Location not captured yet'
+                      : (_locationDisplay ?? 'Resolving location...'),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Refresh location',
+                onPressed: _loadingLocation ? null : _captureLocation,
+                icon: _loadingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.my_location_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD7E3EC)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.place_rounded, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _position == null
+                        ? 'Coordinates unavailable'
+                        : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD7E3EC)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _qrValue == null ? 'No QR scanned yet' : 'QR: $_qrValue',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _scanQr,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(90, 42),
+                  ),
+                  child: const Text('Scan'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReflectionCard() {
+    return _SectionCard(
+      title: 'Reflection After Class',
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _learnedTodayController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'What I learned today',
+            ),
+            validator: (value) => (value == null || value.trim().isEmpty)
+                ? 'Required field'
+                : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _feedbackController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Class or instructor feedback',
+            ),
+            validator: (value) => (value == null || value.trim().isEmpty)
+                ? 'Required field'
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final formattedTime = DateFormat('dd MMM yyyy, h:mm a').format(_timestamp);
@@ -230,186 +411,13 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             AnimatedEntry(
-              child: _SectionCard(
-                title: 'Session Capture',
-                child: Column(
-                  children: [
-                  if (_locationMessage != null) ...[
-                    _PermissionNotice(
-                      icon: Icons.location_off_rounded,
-                      message: _locationMessage!,
-                      tone: const Color(0xFF7C2D12),
-                      background: const Color(0xFFFFEDD5),
-                      actions: [
-                        if (_locationServiceDisabled)
-                          TextButton(
-                            onPressed: _openLocationSettings,
-                            child: const Text('Open Location'),
-                          ),
-                        if (_locationDeniedForever)
-                          TextButton(
-                            onPressed: _openPermissionSettings,
-                            child: const Text('Open Settings'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (_cameraMessage != null) ...[
-                    _PermissionNotice(
-                      icon: Icons.videocam_off_rounded,
-                      message: _cameraMessage!,
-                      tone: const Color(0xFF1E3A8A),
-                      background: const Color(0xFFDBEAFE),
-                      actions: [
-                        if (_cameraDeniedForever)
-                          TextButton(
-                            onPressed: _openAppSettings,
-                            child: const Text('Open Settings'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule_rounded, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.place_rounded,
-                          size: 18,
-                          color: Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _position == null
-                              ? 'Location not captured yet'
-                              : (_locationDisplay ?? 'Resolving location...'),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Refresh location',
-                        onPressed: _loadingLocation ? null : _captureLocation,
-                        icon: _loadingLocation
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.my_location_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFD7E3EC)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.place_rounded, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _position == null
-                                ? 'Coordinates unavailable'
-                                : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFD7E3EC)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.qr_code_scanner_rounded, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _qrValue == null
-                                ? 'No QR scanned yet'
-                                : 'QR: $_qrValue',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _scanQr,
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(90, 42),
-                          ),
-                          child: const Text('Scan'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildSessionCaptureCard(formattedTime),
             ),
-              ),
             const SizedBox(height: 12),
             AnimatedEntry(
               delay: const Duration(milliseconds: 80),
-              child: _SectionCard(
-                title: 'Reflection After Class',
-                child: Column(
-                  children: [
-                  TextFormField(
-                    controller: _learnedTodayController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'What I learned today',
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty)
-                        ? 'Required field'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _feedbackController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Class or instructor feedback',
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty)
-                        ? 'Required field'
-                        : null,
-                  ),
-                ],
-              ),
+              child: _buildReflectionCard(),
             ),
-              ),
             const SizedBox(height: 18),
             AnimatedEntry(
               delay: const Duration(milliseconds: 140),
@@ -533,8 +541,9 @@ class _QrScannerPageState extends State<_QrScannerPage> {
           if (_found) {
             return;
           }
-          final code =
-              capture.barcodes.isNotEmpty ? capture.barcodes.first.rawValue : null;
+          final code = capture.barcodes.isNotEmpty
+              ? capture.barcodes.first.rawValue
+              : null;
           if (code == null || code.isEmpty) {
             return;
           }

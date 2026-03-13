@@ -176,13 +176,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
     if (_position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('GPS location is required before submit.')),
+        const SnackBar(
+            content: Text('GPS location is required before submit.')),
       );
       return;
     }
     if (_qrValue == null || _qrValue!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QR code value is required before submit.')),
+        const SnackBar(
+            content: Text('QR code value is required before submit.')),
       );
       return;
     }
@@ -228,6 +230,241 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
   }
 
+  Widget _buildSessionCaptureCard(String formattedTime) {
+    return _SectionCard(
+      title: 'Session Capture',
+      child: Column(
+        children: [
+          if (_locationMessage != null) ...[
+            _PermissionNotice(
+              icon: Icons.location_off_rounded,
+              message: _locationMessage!,
+              tone: const Color(0xFF7C2D12),
+              background: const Color(0xFFFFEDD5),
+              actions: [
+                if (_locationServiceDisabled)
+                  TextButton(
+                    onPressed: _openLocationSettings,
+                    child: const Text('Open Location'),
+                  ),
+                if (_locationDeniedForever)
+                  TextButton(
+                    onPressed: _openPermissionSettings,
+                    child: const Text('Open Settings'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_cameraMessage != null) ...[
+            _PermissionNotice(
+              icon: Icons.videocam_off_rounded,
+              message: _cameraMessage!,
+              tone: const Color(0xFF1E3A8A),
+              background: const Color(0xFFDBEAFE),
+              actions: [
+                if (_cameraDeniedForever)
+                  TextButton(
+                    onPressed: _openAppSettings,
+                    child: const Text('Open Settings'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              const Icon(Icons.schedule_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                formattedTime,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.place_rounded,
+                  size: 18,
+                  color: Color(0xFF334155),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _position == null
+                      ? 'Location not captured yet'
+                      : (_locationDisplay ?? 'Resolving location...'),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Refresh location',
+                onPressed: _loadingLocation ? null : _captureLocation,
+                icon: _loadingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.my_location_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD7E3EC)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.place_rounded, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _position == null
+                        ? 'Coordinates unavailable'
+                        : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD7E3EC)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _qrValue == null ? 'No QR scanned yet' : 'QR: $_qrValue',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _scanQr,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(90, 42),
+                  ),
+                  child: const Text('Scan'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReflectionCard() {
+    return _SectionCard(
+      title: 'Reflection Before Class',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _FormLabel(
+            label: 'Previous Class Topic',
+            child: TextFormField(
+              controller: _previousTopicController,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Introduction to Macroeconomics',
+                fillColor: Color(0xFFBFDBFE),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Required field'
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _FormLabel(
+            label: 'Expected Topic Today',
+            child: TextFormField(
+              controller: _expectedTopicController,
+              decoration: const InputDecoration(
+                hintText: 'What are you excited to learn?',
+                fillColor: Color(0xFFBFDBFE),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Required field'
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Mood Before Class',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'How are you feeling intellectually today?',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF334155),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: _moodChoices
+                      .map(
+                        (choice) => Expanded(
+                          child: _MoodChip(
+                            emoji: choice.emoji,
+                            label: choice.label,
+                            selected: _moodBeforeClass == choice.value,
+                            onTap: () {
+                              setState(() {
+                                _moodBeforeClass = choice.value;
+                              });
+                            },
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final formattedTime = DateFormat('dd MMM yyyy, h:mm a').format(_timestamp);
@@ -240,244 +477,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             AnimatedEntry(
-              child: _SectionCard(
-                title: 'Session Capture',
-                child: Column(
-                  children: [
-                  if (_locationMessage != null) ...[
-                    _PermissionNotice(
-                      icon: Icons.location_off_rounded,
-                      message: _locationMessage!,
-                      tone: const Color(0xFF7C2D12),
-                      background: const Color(0xFFFFEDD5),
-                      actions: [
-                        if (_locationServiceDisabled)
-                          TextButton(
-                            onPressed: _openLocationSettings,
-                            child: const Text('Open Location'),
-                          ),
-                        if (_locationDeniedForever)
-                          TextButton(
-                            onPressed: _openPermissionSettings,
-                            child: const Text('Open Settings'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (_cameraMessage != null) ...[
-                    _PermissionNotice(
-                      icon: Icons.videocam_off_rounded,
-                      message: _cameraMessage!,
-                      tone: const Color(0xFF1E3A8A),
-                      background: const Color(0xFFDBEAFE),
-                      actions: [
-                        if (_cameraDeniedForever)
-                          TextButton(
-                            onPressed: _openAppSettings,
-                            child: const Text('Open Settings'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule_rounded, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.place_rounded,
-                          size: 18,
-                          color: Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _position == null
-                              ? 'Location not captured yet'
-                              : (_locationDisplay ?? 'Resolving location...'),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Refresh location',
-                        onPressed: _loadingLocation ? null : _captureLocation,
-                        icon: _loadingLocation
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.my_location_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFD7E3EC)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.place_rounded, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _position == null
-                                ? 'Coordinates unavailable'
-                                : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFD7E3EC)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.qr_code_scanner_rounded, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _qrValue == null
-                                ? 'No QR scanned yet'
-                                : 'QR: $_qrValue',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _scanQr,
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(90, 42),
-                          ),
-                          child: const Text('Scan'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildSessionCaptureCard(formattedTime),
             ),
-              ),
             const SizedBox(height: 12),
             AnimatedEntry(
               delay: const Duration(milliseconds: 80),
-              child: _SectionCard(
-                title: 'Reflection Before Class',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                  _FormLabel(
-                    label: 'Previous Class Topic',
-                    child: TextFormField(
-                      controller: _previousTopicController,
-                      decoration: const InputDecoration(
-                        hintText: 'e.g., Introduction to Macroeconomics',
-                        fillColor: Color(0xFFBFDBFE),
-                      ),
-                      validator: (value) =>
-                          (value == null || value.trim().isEmpty)
-                              ? 'Required field'
-                              : null,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _FormLabel(
-                    label: 'Expected Topic Today',
-                    child: TextFormField(
-                      controller: _expectedTopicController,
-                      decoration: const InputDecoration(
-                        hintText: 'What are you excited to learn?',
-                        fillColor: Color(0xFFBFDBFE),
-                      ),
-                      validator: (value) =>
-                          (value == null || value.trim().isEmpty)
-                              ? 'Required field'
-                              : null,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Mood Before Class',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'How are you feeling intellectually today?',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: _moodChoices
-                              .map(
-                                (choice) => Expanded(
-                                  child: _MoodChip(
-                                    emoji: choice.emoji,
-                                    label: choice.label,
-                                    selected: _moodBeforeClass == choice.value,
-                                    onTap: () {
-                                      setState(() {
-                                        _moodBeforeClass = choice.value;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildReflectionCard(),
             ),
-              ),
             const SizedBox(height: 18),
             AnimatedEntry(
               delay: const Duration(milliseconds: 140),
@@ -584,7 +590,9 @@ class _MoodChip extends StatelessWidget {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: selected ? const Color(0xFFFCD34D) : const Color(0xFFF1F5F9),
+                color: selected
+                    ? const Color(0xFFFCD34D)
+                    : const Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
               child: Text(emoji, style: const TextStyle(fontSize: 22)),
@@ -598,7 +606,9 @@ class _MoodChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? const Color(0xFF92400E) : const Color(0xFF0F172A),
+                color: selected
+                    ? const Color(0xFF92400E)
+                    : const Color(0xFF0F172A),
               ),
             ),
           ],
@@ -690,8 +700,9 @@ class _QrScannerPageState extends State<_QrScannerPage> {
           if (_found) {
             return;
           }
-          final code =
-              capture.barcodes.isNotEmpty ? capture.barcodes.first.rawValue : null;
+          final code = capture.barcodes.isNotEmpty
+              ? capture.barcodes.first.rawValue
+              : null;
           if (code == null || code.isEmpty) {
             return;
           }
