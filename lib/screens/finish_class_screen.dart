@@ -219,7 +219,7 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedTime = DateFormat('dd MMM yyyy, HH:mm').format(_timestamp);
+    final formattedTime = DateFormat('dd MMM yyyy, h:mm a').format(_timestamp);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Finish Class (After Class)')),

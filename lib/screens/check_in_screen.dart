@@ -229,7 +229,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedTime = DateFormat('dd MMM yyyy, HH:mm').format(_timestamp);
+    final formattedTime = DateFormat('dd MMM yyyy, h:mm a').format(_timestamp);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Check-in (Before Class)')),

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart' as geo;
+import 'package:http/http.dart' as http;
 
 class LocationAccessResult {
   const LocationAccessResult({
@@ -21,44 +24,81 @@ class LocationAccessResult {
 
 class LocationService {
   static Future<String> toHumanReadable(Position position) async {
+    final fallbackCoords =
+        '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+
     try {
       final placemarks = await geo.placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
 
-      if (placemarks.isEmpty) {
-        return '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
-      }
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final area = <String?>[
+          place.subLocality,
+          place.locality,
+          place.subAdministrativeArea,
+          place.administrativeArea,
+        ]
+            .where((part) => part != null && part.trim().isNotEmpty)
+            .cast<String>()
+            .toList();
 
-      final place = placemarks.first;
-      final area = <String?>[
-        place.subLocality,
-        place.locality,
-        place.subAdministrativeArea,
-        place.administrativeArea,
-      ]
-          .where((part) => part != null && part.trim().isNotEmpty)
-          .cast<String>()
-          .toList();
+        final country = (place.country ?? '').trim();
+        final localityText = area.take(2).join(', ');
 
-      final country = (place.country ?? '').trim();
-      final localityText = area.take(2).join(', ');
-
-      if (localityText.isNotEmpty && country.isNotEmpty) {
-        return '$localityText, $country';
-      }
-      if (localityText.isNotEmpty) {
-        return localityText;
-      }
-      if (country.isNotEmpty) {
-        return country;
+        if (localityText.isNotEmpty && country.isNotEmpty) {
+          return '$localityText, $country';
+        }
+        if (localityText.isNotEmpty) {
+          return localityText;
+        }
+        if (country.isNotEmpty) {
+          return country;
+        }
       }
     } catch (_) {
-      // Fall back to coordinate output when reverse geocoding is unavailable.
+      // Try HTTP fallback below.
     }
 
-    return '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+    try {
+      final uri = Uri.parse(
+        'https://api.bigdatacloud.net/data/reverse-geocode-client'
+        '?latitude=${position.latitude}'
+        '&longitude=${position.longitude}'
+        '&localityLanguage=en',
+      );
+
+      final response = await http.get(uri).timeout(const Duration(seconds: 6));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final locality = (body['city'] ?? body['locality'] ?? body['principalSubdivision'] ?? '')
+            .toString()
+            .trim();
+        final subdivision = (body['principalSubdivision'] ?? '').toString().trim();
+        final country = (body['countryName'] ?? '').toString().trim();
+
+        final parts = <String>[];
+        if (locality.isNotEmpty) {
+          parts.add(locality);
+        }
+        if (subdivision.isNotEmpty && subdivision != locality) {
+          parts.add(subdivision);
+        }
+        if (country.isNotEmpty) {
+          parts.add(country);
+        }
+
+        if (parts.isNotEmpty) {
+          return parts.join(', ');
+        }
+      }
+    } catch (_) {
+      // Fall back below.
+    }
+
+    return fallbackCoords;
   }
 
   static Future<LocationAccessResult> tryGetCurrentPosition() async {

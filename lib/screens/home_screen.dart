@@ -98,13 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            const Row(
-              children: [
-                _TagChip(label: 'HONORS PROGRAM', color: Color(0xFFFDE68A)),
-                SizedBox(width: 8),
-                _TagChip(label: 'SESSION ACTIVE', color: Color(0xFF99F6E4)),
-              ],
-            ),
+            
             const SizedBox(height: 18),
             _ActionCard(
               title: 'Check-in to Class',
@@ -201,32 +195,6 @@ class _TopIdentityRow extends StatelessWidget {
         ),
         const Icon(Icons.notifications_rounded, size: 20, color: Color(0xFF334155)),
       ],
-    );
-  }
-}
-
-class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF334155),
-        ),
-      ),
     );
   }
 }
