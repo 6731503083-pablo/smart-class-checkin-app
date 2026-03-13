@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uuid/uuid.dart';
 
@@ -143,70 +144,131 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final formattedTime = DateFormat('dd MMM yyyy, HH:mm').format(_timestamp);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Finish Class (After Class)')),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            Text('Timestamp: ${_timestamp.toLocal()}'),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _position == null
-                        ? 'GPS: not captured'
-                        : 'GPS: ${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+            _SectionCard(
+              title: 'Session Capture',
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  onPressed: _loadingLocation ? null : _captureLocation,
-                  icon: _loadingLocation
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.my_location),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: ListTile(
-                title: const Text('QR Code'),
-                subtitle: Text(_qrValue ?? 'No QR scanned yet'),
-                trailing: FilledButton(
-                  onPressed: _scanQr,
-                  child: const Text('Scan'),
-                ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.place_rounded,
+                          size: 18,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _position == null
+                              ? 'GPS not captured yet'
+                              : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Refresh location',
+                        onPressed: _loadingLocation ? null : _captureLocation,
+                        icon: _loadingLocation
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFD7E3EC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _qrValue == null
+                                ? 'No QR scanned yet'
+                                : 'QR: $_qrValue',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: _scanQr,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(90, 42),
+                          ),
+                          child: const Text('Scan'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _learnedTodayController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'What I learned today',
-                border: OutlineInputBorder(),
+            _SectionCard(
+              title: 'Reflection After Class',
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _learnedTodayController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'What I learned today',
+                    ),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Required field'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _feedbackController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Class or instructor feedback',
+                    ),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Required field'
+                        : null,
+                  ),
+                ],
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Required field' : null,
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _feedbackController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Class or instructor feedback',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Required field' : null,
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: _submitting ? null : _submit,
               icon: _submitting
@@ -218,6 +280,37 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
                   : const Icon(Icons.save),
               label: const Text('Submit Finish Class'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            child,
           ],
         ),
       ),

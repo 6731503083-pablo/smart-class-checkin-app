@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uuid/uuid.dart';
 
@@ -145,97 +146,157 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final formattedTime = DateFormat('dd MMM yyyy, HH:mm').format(_timestamp);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Check-in (Before Class)')),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            Text('Timestamp: ${_timestamp.toLocal()}'),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _position == null
-                        ? 'GPS: not captured'
-                        : 'GPS: ${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+            _SectionCard(
+              title: 'Session Capture',
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  onPressed: _loadingLocation ? null : _captureLocation,
-                  icon: _loadingLocation
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.my_location),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: ListTile(
-                title: const Text('QR Code'),
-                subtitle: Text(_qrValue ?? 'No QR scanned yet'),
-                trailing: FilledButton(
-                  onPressed: _scanQr,
-                  child: const Text('Scan'),
-                ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.place_rounded,
+                          size: 18,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _position == null
+                              ? 'GPS not captured yet'
+                              : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Refresh location',
+                        onPressed: _loadingLocation ? null : _captureLocation,
+                        icon: _loadingLocation
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFD7E3EC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _qrValue == null
+                                ? 'No QR scanned yet'
+                                : 'QR: $_qrValue',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: _scanQr,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(90, 42),
+                          ),
+                          child: const Text('Scan'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _previousTopicController,
-              decoration: const InputDecoration(
-                labelText: 'Previous class topic',
-                border: OutlineInputBorder(),
+            _SectionCard(
+              title: 'Reflection Before Class',
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _previousTopicController,
+                    decoration: const InputDecoration(
+                      labelText: 'Previous class topic',
+                    ),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Required field'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _expectedTopicController,
+                    decoration: const InputDecoration(
+                      labelText: 'Expected topic for today',
+                    ),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Required field'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: _moodBeforeClass,
+                    decoration: const InputDecoration(
+                      labelText: 'Mood before class',
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('1 - Very negative')),
+                      DropdownMenuItem(value: 2, child: Text('2 - Negative')),
+                      DropdownMenuItem(value: 3, child: Text('3 - Neutral')),
+                      DropdownMenuItem(value: 4, child: Text('4 - Positive')),
+                      DropdownMenuItem(value: 5, child: Text('5 - Very positive')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setState(() {
+                        _moodBeforeClass = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value < 1 || value > 5) {
+                        return 'Mood must be between 1 and 5';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Required field' : null,
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _expectedTopicController,
-              decoration: const InputDecoration(
-                labelText: 'Expected topic for today',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'Required field' : null,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: _moodBeforeClass,
-              decoration: const InputDecoration(
-                labelText: 'Mood before class',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1 - Very negative')),
-                DropdownMenuItem(value: 2, child: Text('2 - Negative')),
-                DropdownMenuItem(value: 3, child: Text('3 - Neutral')),
-                DropdownMenuItem(value: 4, child: Text('4 - Positive')),
-                DropdownMenuItem(value: 5, child: Text('5 - Very positive')),
-              ],
-              onChanged: (value) {
-                if (value == null) {
-                  return;
-                }
-                setState(() {
-                  _moodBeforeClass = value;
-                });
-              },
-              validator: (value) {
-                if (value == null || value < 1 || value > 5) {
-                  return 'Mood must be between 1 and 5';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: _submitting ? null : _submit,
               icon: _submitting
@@ -247,6 +308,37 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   : const Icon(Icons.save),
               label: const Text('Submit Check-in'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            child,
           ],
         ),
       ),
