@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (dt == null) {
       return isoDate;
     }
-    return DateFormat('dd MMM yyyy, HH:mm').format(dt);
+    return DateFormat('EEEE, MMM d • h:mm a').format(dt);
   }
 
   Future<void> _openCheckIn() async {
@@ -64,217 +64,396 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Smart Class Check-in')),
-      body: Stack(
-        children: [
-          const _BackdropShapes(),
-          RefreshIndicator(
-            onRefresh: _loadRecords,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                _HeroCard(
-                  onCheckIn: _openCheckIn,
-                  onFinishClass: _openFinishClass,
+      appBar: AppBar(toolbarHeight: 0),
+      body: RefreshIndicator(
+        onRefresh: _loadRecords,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            const _TopIdentityRow(),
+            const SizedBox(height: 18),
+            const Text(
+              'DASHBOARD',
+              style: TextStyle(
+                letterSpacing: 1.1,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 6),
+            RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 40,
+                  height: 1.05,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
                 ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Recent Records',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _loadRecords,
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (_loading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 36),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_recentRecords.isEmpty)
-                  const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(18),
-                      child: Row(
-                        children: [
-                          Icon(Icons.inbox_rounded, color: Color(0xFF64748B)),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'No records yet. Complete your first check-in.',
-                              style: TextStyle(color: Color(0xFF334155)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  ..._recentRecords.map(
-                    (record) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Card(
-                        child: ListTile(
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: record['type'] == 'Check-in'
-                                  ? const Color(0xFFCFFAFE)
-                                  : const Color(0xFFFFEDD5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              record['type'] == 'Check-in'
-                                  ? Icons.login_rounded
-                                  : Icons.task_alt_rounded,
-                              color: record['type'] == 'Check-in'
-                                  ? const Color(0xFF0E7490)
-                                  : const Color(0xFFC2410C),
-                            ),
-                          ),
-                          title: Text(
-                            record['type'] ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${_formatDate(record['createdAt'] ?? '-')}\n${record['details'] ?? ''}',
-                              style: const TextStyle(height: 1.4),
-                            ),
-                          ),
-                          isThreeLine: true,
-                        ),
-                      ),
-                    ),
+                children: [
+                  TextSpan(text: 'Welcome back,\n'),
+                  TextSpan(
+                    text: 'Julian.',
+                    style: TextStyle(color: Color(0xFFA16207)),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Row(
+              children: [
+                _TagChip(label: 'HONORS PROGRAM', color: Color(0xFFFDE68A)),
+                SizedBox(width: 8),
+                _TagChip(label: 'SESSION ACTIVE', color: Color(0xFF99F6E4)),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 18),
+            _ActionCard(
+              title: 'Check-in to Class',
+              description: 'Scan campus QR or enter room code to register presence.',
+              icon: Icons.login_rounded,
+              backgroundGradient: const [Color(0xFF021B3A), Color(0xFF042E57)],
+              textColor: Colors.white,
+              buttonLabel: 'Begin Now',
+              buttonFilled: true,
+              onTap: _openCheckIn,
+            ),
+            const SizedBox(height: 10),
+            _ActionCard(
+              title: 'Finish Current Class',
+              description: 'Currently in: Advanced Macroeconomics (Room 402)',
+              icon: Icons.logout_rounded,
+              backgroundGradient: const [Color(0xFFC7DDF6), Color(0xFFB8D3F1)],
+              textColor: const Color(0xFF0F172A),
+              buttonLabel: 'End Session',
+              buttonFilled: false,
+              onTap: _openFinishClass,
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Activity',
+                  style: TextStyle(
+                    fontSize: 27,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                TextButton(onPressed: _loadRecords, child: const Text('View All')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 30),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_recentRecords.isEmpty)
+              const _EmptyActivityCard()
+            else
+              ..._recentRecords.take(5).map(
+                (record) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _ActivityRow(
+                    title: record['details'] ?? '-',
+                    subtitle: _formatDate(record['createdAt'] ?? '-'),
+                    verified: record['type'] == 'Check-in',
+                    icon: record['type'] == 'Check-in'
+                        ? Icons.meeting_room_rounded
+                        : Icons.menu_book_rounded,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10),
+            const _GoalCard(),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _BackdropShapes extends StatelessWidget {
-  const _BackdropShapes();
+class _TopIdentityRow extends StatelessWidget {
+  const _TopIdentityRow();
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned(
-            top: -80,
-            right: -70,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0x66A7F3D0), Color(0x33BAE6FD)],
-                ),
-              ),
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: const BoxDecoration(
+            color: Color(0xFFFED7AA),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.person, size: 18, color: Color(0xFF78350F)),
+        ),
+        const SizedBox(width: 10),
+        const Expanded(
+          child: Text(
+            'University Connect',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
             ),
           ),
-          Positioned(
-            left: -70,
-            top: 220,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0x44FDBA74), Color(0x11FB923C)],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
+        const Icon(Icons.notifications_rounded, size: 20, color: Color(0xFF334155)),
+      ],
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF334155),
+        ),
       ),
     );
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.onCheckIn, required this.onFinishClass});
+class _ActionCard extends StatelessWidget {
+  const _ActionCard({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.backgroundGradient,
+    required this.textColor,
+    required this.buttonLabel,
+    required this.buttonFilled,
+    required this.onTap,
+  });
 
-  final VoidCallback onCheckIn;
-  final VoidCallback onFinishClass;
+  final String title;
+  final String description;
+  final IconData icon;
+  final List<Color> backgroundGradient;
+  final Color textColor;
+  final String buttonLabel;
+  final bool buttonFilled;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0E7490), Color(0xFF155E75)],
+          colors: backgroundGradient,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33155E75),
-            blurRadius: 16,
-            offset: Offset(0, 8),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Welcome',
+          Icon(icon, color: textColor, size: 26),
+          const SizedBox(height: 14),
+          Text(
+            title,
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 31,
+              fontSize: 34,
+              height: 1.1,
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Capture attendance and reflections in one smooth flow.',
-            style: TextStyle(color: Color(0xFFE0F2FE), height: 1.4),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: onCheckIn,
-            icon: const Icon(Icons.login_rounded),
-            label: const Text('Start Check-in'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0E7490),
+          Text(
+            description,
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.82),
+              height: 1.35,
             ),
           ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: onFinishClass,
-            icon: const Icon(Icons.task_alt_rounded),
-            label: const Text('Start Finish Class'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0x80FFFFFF)),
+          const SizedBox(height: 14),
+          if (buttonFilled)
+            FilledButton(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(132, 44),
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF0F172A),
+              ),
+              child: Text('$buttonLabel  ->'),
+            )
+          else
+            FilledButton(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(132, 44),
+                backgroundColor: const Color(0xFF082F5B),
+                foregroundColor: Colors.white,
+              ),
+              child: Text(buttonLabel),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({
+    required this.title,
+    required this.subtitle,
+    required this.verified,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool verified;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDBEAFE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: const Color(0xFF1E3A8A)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            verified ? 'VERIFIED' : 'PENDING',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: verified ? const Color(0xFF14532D) : const Color(0xFF78716C),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GoalCard extends StatelessWidget {
+  const _GoalCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDCEBFB),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Attendance Goal',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'You are at 94% attendance this semester. Keep it up!',
+                  style: TextStyle(color: Color(0xFF334155), height: 1.35),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 68,
+            height: 68,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFA16207), width: 3),
+            ),
+            child: const Text(
+              '94%',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF78350F),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyActivityCard extends StatelessWidget {
+  const _EmptyActivityCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        'No records yet. Complete your first check-in.',
+        style: TextStyle(color: Color(0xFF475569)),
       ),
     );
   }

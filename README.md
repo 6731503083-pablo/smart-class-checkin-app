@@ -104,6 +104,9 @@ Build web before deploy:
 flutter build web
 ```
 
+Why updates should appear without incognito:
+- Firebase Hosting headers in firebase.json are configured to avoid stale caching of index.html, flutter_bootstrap.js, and flutter_service_worker.js.
+
 After deploy, add your public URL here:
 - Firebase URL: https://smart-class-checkin.web.app
 
