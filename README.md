@@ -107,6 +107,24 @@ flutter build web
 After deploy, add your public URL here:
 - Firebase URL: https://smart-class-checkin.web.app
 
+## Auto Deploy from GitHub Push
+This repository is configured with GitHub Actions to auto deploy to Firebase Hosting when code is pushed to main.
+
+Workflow file:
+- .github/workflows/firebase-hosting.yml
+
+One-time setup required in GitHub:
+1. Go to Firebase Console > Project Settings > Service accounts.
+2. Generate a new private key (JSON) for Firebase Admin SDK.
+3. In GitHub repo settings, open Secrets and variables > Actions.
+4. Create a repository secret named FIREBASE_SERVICE_ACCOUNT_SMART_CLASS_CHECKIN.
+5. Paste the full JSON content as the secret value.
+
+After this setup, every push to main triggers:
+1. flutter pub get
+2. flutter build web
+3. firebase hosting deploy (live channel)
+
 ## AI Usage Report (Short)
 AI tools used:
 - GitHub Copilot (GPT-5.3-Codex)
