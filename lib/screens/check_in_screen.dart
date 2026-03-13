@@ -35,6 +35,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool _cameraDeniedForever = false;
   String? _locationDisplay;
 
+  static const List<_MoodChoice> _moodChoices = [
+    _MoodChoice(value: 1, emoji: '😫', label: 'EXHAUSTED'),
+    _MoodChoice(value: 2, emoji: '🧐', label: 'CURIOUS'),
+    _MoodChoice(value: 3, emoji: '😊', label: 'READY'),
+    _MoodChoice(value: 4, emoji: '⚡', label: 'FOCUSED'),
+    _MoodChoice(value: 5, emoji: '🚀', label: 'INSPIRED'),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -381,53 +389,85 @@ class _CheckInScreenState extends State<CheckInScreen> {
             _SectionCard(
               title: 'Reflection Before Class',
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
-                    controller: _previousTopicController,
-                    decoration: const InputDecoration(
-                      labelText: 'Previous class topic',
+                  _FormLabel(
+                    label: 'Previous Class Topic',
+                    child: TextFormField(
+                      controller: _previousTopicController,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g., Introduction to Macroeconomics',
+                        fillColor: Color(0xFFBFDBFE),
+                      ),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? 'Required field'
+                              : null,
                     ),
-                    validator: (value) => (value == null || value.trim().isEmpty)
-                        ? 'Required field'
-                        : null,
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _expectedTopicController,
-                    decoration: const InputDecoration(
-                      labelText: 'Expected topic for today',
+                  _FormLabel(
+                    label: 'Expected Topic Today',
+                    child: TextFormField(
+                      controller: _expectedTopicController,
+                      decoration: const InputDecoration(
+                        hintText: 'What are you excited to learn?',
+                        fillColor: Color(0xFFBFDBFE),
+                      ),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? 'Required field'
+                              : null,
                     ),
-                    validator: (value) => (value == null || value.trim().isEmpty)
-                        ? 'Required field'
-                        : null,
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    initialValue: _moodBeforeClass,
-                    decoration: const InputDecoration(
-                      labelText: 'Mood before class',
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('1 - Very negative')),
-                      DropdownMenuItem(value: 2, child: Text('2 - Negative')),
-                      DropdownMenuItem(value: 3, child: Text('3 - Neutral')),
-                      DropdownMenuItem(value: 4, child: Text('4 - Positive')),
-                      DropdownMenuItem(value: 5, child: Text('5 - Very positive')),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setState(() {
-                        _moodBeforeClass = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value < 1 || value > 5) {
-                        return 'Mood must be between 1 and 5';
-                      }
-                      return null;
-                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Mood Before Class',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'How are you feeling intellectually today?',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF334155),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: _moodChoices
+                              .map(
+                                (choice) => Expanded(
+                                  child: _MoodChip(
+                                    emoji: choice.emoji,
+                                    label: choice.label,
+                                    selected: _moodBeforeClass == choice.value,
+                                    onTap: () {
+                                      setState(() {
+                                        _moodBeforeClass = choice.value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -480,6 +520,95 @@ class _SectionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FormLabel extends StatelessWidget {
+  const _FormLabel({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    );
+  }
+}
+
+class _MoodChip extends StatelessWidget {
+  const _MoodChip({
+    required this.emoji,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? const Color(0xFFFCD34D) : const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? const Color(0xFF92400E) : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MoodChoice {
+  const _MoodChoice({
+    required this.value,
+    required this.emoji,
+    required this.label,
+  });
+
+  final int value;
+  final String emoji;
+  final String label;
 }
 
 class _PermissionNotice extends StatelessWidget {
