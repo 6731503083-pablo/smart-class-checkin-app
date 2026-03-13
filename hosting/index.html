@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Class Check-in</title>
+    <style>
+      :root {
+        --bg1: #f0fdfa;
+        --bg2: #ecfeff;
+        --ink: #0f172a;
+        --accent: #0e7490;
+        --card: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 10% 10%, #ccfbf1, transparent 30%),
+          radial-gradient(circle at 90% 80%, #bae6fd, transparent 35%),
+          linear-gradient(135deg, var(--bg1), var(--bg2));
+        display: grid;
+        place-items: center;
+        padding: 20px;
+      }
+      .card {
+        width: min(760px, 100%);
+        background: var(--card);
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 16px 50px rgba(15, 23, 42, 0.12);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+      }
+      p {
+        line-height: 1.6;
+      }
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tag {
+        display: inline-block;
+        margin-top: 12px;
+        background: #cffafe;
+        color: var(--accent);
+        border: 1px solid #99f6e4;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Smart Class Check-in and Learning Reflection App</h1>
+      <p>
+        This page is the Firebase Hosting deployment artifact for the midterm lab.
+      </p>
+      <ul>
+        <li>Flutter mobile app includes check-in and finish-class flows.</li>
+        <li>Each flow captures timestamp, GPS, QR scan, and required inputs.</li>
+        <li>Records are stored locally using SQLite.</li>
+      </ul>
+      <div class="tag">MVP Deployment Component</div>
+    </main>
+  </body>
+</html>
