@@ -31,6 +31,7 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
   bool _locationServiceDisabled = false;
   String? _cameraMessage;
   bool _cameraDeniedForever = false;
+  String? _locationDisplay;
 
   @override
   void initState() {
@@ -61,7 +62,20 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
       _locationMessage = result.errorMessage;
       _locationDeniedForever = result.permissionDeniedForever;
       _locationServiceDisabled = result.serviceDisabled;
+      if (result.position == null) {
+        _locationDisplay = null;
+      }
     });
+
+    if (result.position != null) {
+      final display = await LocationService.toHumanReadable(result.position!);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _locationDisplay = display;
+      });
+    }
 
     if (result.hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,8 +294,8 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
                       Expanded(
                         child: Text(
                           _position == null
-                              ? 'GPS not captured yet'
-                              : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                              ? 'Location not captured yet'
+                              : (_locationDisplay ?? 'Resolving location...'),
                         ),
                       ),
                       IconButton(
@@ -296,6 +310,30 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
                             : const Icon(Icons.my_location_rounded),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFD7E3EC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.place_rounded, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _position == null
+                                ? 'Coordinates unavailable'
+                                : '${_position!.latitude.toStringAsFixed(6)}, ${_position!.longitude.toStringAsFixed(6)}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Container(

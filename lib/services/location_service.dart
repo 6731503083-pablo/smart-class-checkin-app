@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 
 class LocationAccessResult {
   const LocationAccessResult({
@@ -19,6 +20,47 @@ class LocationAccessResult {
 }
 
 class LocationService {
+  static Future<String> toHumanReadable(Position position) async {
+    try {
+      final placemarks = await geo.placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isEmpty) {
+        return '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+      }
+
+      final place = placemarks.first;
+      final area = <String?>[
+        place.subLocality,
+        place.locality,
+        place.subAdministrativeArea,
+        place.administrativeArea,
+      ]
+          .where((part) => part != null && part.trim().isNotEmpty)
+          .cast<String>()
+          .toList();
+
+      final country = (place.country ?? '').trim();
+      final localityText = area.take(2).join(', ');
+
+      if (localityText.isNotEmpty && country.isNotEmpty) {
+        return '$localityText, $country';
+      }
+      if (localityText.isNotEmpty) {
+        return localityText;
+      }
+      if (country.isNotEmpty) {
+        return country;
+      }
+    } catch (_) {
+      // Fall back to coordinate output when reverse geocoding is unavailable.
+    }
+
+    return '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+  }
+
   static Future<LocationAccessResult> tryGetCurrentPosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
