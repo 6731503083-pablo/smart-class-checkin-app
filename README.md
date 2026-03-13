@@ -105,7 +105,7 @@ flutter build web
 ```
 
 After deploy, add your public URL here:
-- Firebase URL: <YOUR_FIREBASE_HOSTING_URL>
+- Firebase URL: https://smart-class-checkin.web.app
 
 ## AI Usage Report (Short)
 AI tools used:
