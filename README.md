@@ -1,43 +1,36 @@
 # Smart Class Check-in and Learning Reflection App
 
+## Exam Rubric Scope (Strict)
+This repository is intentionally limited to the MVP requirements defined in the exam PRD/rubric.
+
+Included scope only:
+- 3 screens: Home, Check-in (Before Class), Finish Class (After Class)
+- GPS capture on both flows
+- QR scan on both flows
+- Required form validation
+- Local persistence with SQLite
+- Firebase Hosting deployment artifact
+
+Not included by design (out of rubric):
+- Advanced analytics dashboards
+- Multi-role admin portal
+- Complex sync/conflict workflows
+
+Implementation policy for this repo:
+- Do not introduce features outside the exam rubric.
+- Changes must preserve required fields and validation rules from PRD.
+- Keep architecture simple and explainable for exam demo.
+
 ## Project Description
-This project is a Flutter MVP for class attendance and engagement verification.
+Flutter MVP for class attendance and learning reflection verification.
 
-It provides:
-- Check-in (before class): GPS, timestamp, QR scan, previous topic, expected topic, mood (1-5)
-- Finish Class (after class): GPS, timestamp, QR scan, learned today, class feedback
-- Local persistence with SQLite and recent record history on Home screen
-
-It also includes a Firebase Hosting deployment component in the hosting folder.
-
-## Implementation Task Breakdown
-Use this sequence to build and present quickly during the exam.
-
-1. Requirement and data design
-- Confirm mandatory fields and validation rules from PRD
-- Finalize data models for check-in and finish-class
-
-2. Project setup
-- Add dependencies: sqflite, geolocator, mobile_scanner, uuid, firebase_core, cloud_firestore
-- Create app structure: screens, services, models
-
-3. Core features
-- Build Home screen with navigation and recent records
-- Build Check-in screen with GPS, QR scanner, and pre-class form
-- Build Finish Class screen with GPS, QR scanner, and reflection form
-
-4. Data persistence
-- Create SQLite tables
-- Save check-in and finish-class records
-- Load recent records on Home screen
-
-5. Firebase deployment component
-- Build Flutter web output and deploy to Firebase Hosting
-
-6. Final verification
-- Check required field validation
-- Check permission-denied behavior
-- Check successful save and history update
+Implemented:
+- Check-in (before class): timestamp, GPS, QR scan, previous topic, expected topic, mood (1-5)
+- Finish Class (after class): timestamp, GPS, QR scan, learned today, class feedback
+- Local history on Home screen
+- Permission handling UX for location/camera
+- Human-readable location text fallback
+- 12-hour time display (AM/PM)
 
 ## Folder Structure
 .
@@ -53,7 +46,9 @@ Use this sequence to build and present quickly during the exam.
 	- services/
 		- database_service.dart
 		- location_service.dart
-- hosting/
+	- widgets/
+		- animated_entry.dart
+- web/
 	- index.html
 - PRD_Smart_Class_CheckIn.md
 - README.md
@@ -79,6 +74,23 @@ Run on device/emulator:
 flutter run
 ```
 
+Run web locally:
+
+```bash
+flutter run -d chrome
+```
+
+## Rubric Verification Checklist
+Use this quick checklist before submission/demo.
+
+1. Home screen opens and navigation to both flows works.
+2. Check-in requires GPS + QR + all required fields.
+3. Finish Class requires GPS + QR + all required fields.
+4. Mood in Check-in remains in range 1-5.
+5. Records are saved locally and appear in recent history.
+6. Permission denied states show guidance actions.
+7. Web build deploys to Firebase Hosting successfully.
+
 ## Firebase Configuration Notes
 This repository is local-first and works even if Firebase is not configured.
 
@@ -101,11 +113,12 @@ The deployable component is:
 Build web before deploy:
 
 ```bash
-flutter build web
+flutter build web --pwa-strategy=none
 ```
 
 Why updates should appear without incognito:
-- Firebase Hosting headers in firebase.json are configured to avoid stale caching of index.html, flutter_bootstrap.js, and flutter_service_worker.js.
+- Firebase Hosting headers are configured to avoid stale caching of web entry files.
+- Startup cache reset logic in web/index.html clears old service worker/caches from earlier builds.
 
 After deploy, add your public URL here:
 - Firebase URL: https://smart-class-checkin.web.app
@@ -125,8 +138,13 @@ One-time setup required in GitHub:
 
 After this setup, every push to main triggers:
 1. flutter pub get
-2. flutter build web
+2. flutter build web --pwa-strategy=none
 3. firebase hosting deploy (live channel)
+
+## Stability Notes (Within Rubric)
+- Local-first behavior remains primary requirement.
+- Firebase/Firestore sync is optional and does not block rubric completion.
+- If external reverse-geocoding service is unavailable, app still stores accurate GPS coordinates and uses a friendly fallback location label.
 
 ## AI Usage Report (Short)
 AI tools used:
