@@ -93,10 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 children: [
                   TextSpan(text: 'Welcome back,\n'),
-                  TextSpan(
-                    text: 'Julian.',
-                    style: TextStyle(color: Color(0xFFA16207)),
-                  ),
+                  
                 ],
               ),
             ),
@@ -168,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             const SizedBox(height: 10),
-            const _GoalCard(),
+           
           ],
         ),
       ),
@@ -384,61 +381,6 @@ class _ActivityRow extends StatelessWidget {
   }
 }
 
-class _GoalCard extends StatelessWidget {
-  const _GoalCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCEBFB),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Attendance Goal',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'You are at 94% attendance this semester. Keep it up!',
-                  style: TextStyle(color: Color(0xFF334155), height: 1.35),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 68,
-            height: 68,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFA16207), width: 3),
-            ),
-            child: const Text(
-              '94%',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF78350F),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _EmptyActivityCard extends StatelessWidget {
   const _EmptyActivityCard();
