@@ -24,8 +24,7 @@ class LocationAccessResult {
 
 class LocationService {
   static Future<String> toHumanReadable(Position position) async {
-    final fallbackCoords =
-        '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+    const fallbackText = 'Approximate area (city unavailable)';
 
     try {
       final placemarks = await geo.placemarkFromCoordinates(
@@ -98,7 +97,47 @@ class LocationService {
       // Fall back below.
     }
 
-    return fallbackCoords;
+    try {
+      final uri = Uri.parse(
+        'https://geocode.maps.co/reverse'
+        '?lat=${position.latitude}'
+        '&lon=${position.longitude}'
+        '&format=jsonv2',
+      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 6));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final address = (body['address'] as Map<String, dynamic>? ?? const {});
+        final city = (address['city'] ??
+                address['town'] ??
+                address['village'] ??
+                address['municipality'] ??
+                '')
+            .toString()
+            .trim();
+        final state = (address['state'] ?? address['county'] ?? '').toString().trim();
+        final country = (address['country'] ?? '').toString().trim();
+
+        final parts = <String>[];
+        if (city.isNotEmpty) {
+          parts.add(city);
+        }
+        if (state.isNotEmpty && state != city) {
+          parts.add(state);
+        }
+        if (country.isNotEmpty) {
+          parts.add(country);
+        }
+
+        if (parts.isNotEmpty) {
+          return parts.join(', ');
+        }
+      }
+    } catch (_) {
+      // Fall back below.
+    }
+
+    return fallbackText;
   }
 
   static Future<LocationAccessResult> tryGetCurrentPosition() async {

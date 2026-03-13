@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/database_service.dart';
+import '../widgets/animated_entry.dart';
 import 'check_in_screen.dart';
 import 'finish_class_screen.dart';
 
@@ -47,19 +48,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openCheckIn() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const CheckInScreen()),
-    );
+    await _openWithSlide(const CheckInScreen());
     _loadRecords();
   }
 
   Future<void> _openFinishClass() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const FinishClassScreen()),
-    );
+    await _openWithSlide(const FinishClassScreen());
     _loadRecords();
+  }
+
+  Future<void> _openWithSlide(Widget page) async {
+    await Navigator.push<void>(
+      context,
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 240),
+        pageBuilder: (_, __, ___) => page,
+        transitionsBuilder: (_, animation, __, child) {
+          final slide = Tween<Offset>(
+            begin: const Offset(0.06, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+
+          return SlideTransition(
+            position: slide,
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -71,70 +88,82 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
-            const _TopIdentityRow(),
+            const AnimatedEntry(child: _TopIdentityRow()),
             const SizedBox(height: 18),
-            const Text(
-              'DASHBOARD',
-              style: TextStyle(
-                letterSpacing: 1.1,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF64748B),
+            const AnimatedEntry(
+              delay: Duration(milliseconds: 40),
+              child: Text(
+                'DASHBOARD',
+                style: TextStyle(
+                  letterSpacing: 1.1,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF64748B),
+                ),
               ),
             ),
             const SizedBox(height: 6),
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 40,
-                  height: 1.05,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
-                children: [
-                  TextSpan(text: 'Welcome back,\n'),
-                  
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            
-            const SizedBox(height: 18),
-            _ActionCard(
-              title: 'Check-in to Class',
-              description: 'Scan campus QR or enter room code to register presence.',
-              icon: Icons.login_rounded,
-              backgroundGradient: const [Color(0xFF021B3A), Color(0xFF042E57)],
-              textColor: Colors.white,
-              buttonLabel: 'Begin Now',
-              buttonFilled: true,
-              onTap: _openCheckIn,
-            ),
-            const SizedBox(height: 10),
-            _ActionCard(
-              title: 'Finish Current Class',
-              description: 'Currently in: Advanced Macroeconomics (Room 402)',
-              icon: Icons.logout_rounded,
-              backgroundGradient: const [Color(0xFFC7DDF6), Color(0xFFB8D3F1)],
-              textColor: const Color(0xFF0F172A),
-              buttonLabel: 'End Session',
-              buttonFilled: false,
-              onTap: _openFinishClass,
-            ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Activity',
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 80),
+              child: RichText(
+                text: const TextSpan(
                   style: TextStyle(
-                    fontSize: 27,
+                    fontSize: 40,
+                    height: 1.05,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                   ),
+                  children: [
+                    TextSpan(text: 'Welcome back,\n'),
+                  ],
                 ),
-                TextButton(onPressed: _loadRecords, child: const Text('View All')),
-              ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 120),
+              child: _ActionCard(
+                title: 'Check-in to Class',
+                description: 'Scan campus QR or enter room code to register presence.',
+                icon: Icons.login_rounded,
+                backgroundGradient: const [Color(0xFF021B3A), Color(0xFF042E57)],
+                textColor: Colors.white,
+                buttonLabel: 'Begin Now',
+                buttonFilled: true,
+                onTap: _openCheckIn,
+              ),
+            ),
+            const SizedBox(height: 10),
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 170),
+              child: _ActionCard(
+                title: 'Finish Current Class',
+                description: 'Currently in: Advanced Macroeconomics (Room 402)',
+                icon: Icons.logout_rounded,
+                backgroundGradient: const [Color(0xFFC7DDF6), Color(0xFFB8D3F1)],
+                textColor: const Color(0xFF0F172A),
+                buttonLabel: 'End Session',
+                buttonFilled: false,
+                onTap: _openFinishClass,
+              ),
+            ),
+            const SizedBox(height: 18),
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 220),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Recent Activity',
+                    style: TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  TextButton(onPressed: _loadRecords, child: const Text('View All')),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             if (_loading)
@@ -143,23 +172,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (_recentRecords.isEmpty)
-              const _EmptyActivityCard()
+              const AnimatedEntry(
+                delay: Duration(milliseconds: 260),
+                child: _EmptyActivityCard(),
+              )
             else
-              ..._recentRecords.take(5).map(
-                (record) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _ActivityRow(
-                    title: record['details'] ?? '-',
-                    subtitle: _formatDate(record['createdAt'] ?? '-'),
-                    verified: record['type'] == 'Check-in',
-                    icon: record['type'] == 'Check-in'
-                        ? Icons.meeting_room_rounded
-                        : Icons.menu_book_rounded,
+              ..._recentRecords.take(5).toList().asMap().entries.map(
+                (entry) => AnimatedEntry(
+                  delay: Duration(milliseconds: 260 + (entry.key * 50)),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _ActivityRow(
+                      title: entry.value['details'] ?? '-',
+                      subtitle: _formatDate(entry.value['createdAt'] ?? '-'),
+                      verified: entry.value['type'] == 'Check-in',
+                      icon: entry.value['type'] == 'Check-in'
+                          ? Icons.meeting_room_rounded
+                          : Icons.menu_book_rounded,
+                    ),
                   ),
                 ),
               ),
-            const SizedBox(height: 10),
-           
           ],
         ),
       ),

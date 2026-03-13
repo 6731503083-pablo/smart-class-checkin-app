@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../models/check_in_record.dart';
 import '../services/database_service.dart';
 import '../services/location_service.dart';
+import '../widgets/animated_entry.dart';
 
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
@@ -238,10 +239,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            _SectionCard(
-              title: 'Session Capture',
-              child: Column(
-                children: [
+            AnimatedEntry(
+              child: _SectionCard(
+                title: 'Session Capture',
+                child: Column(
+                  children: [
                   if (_locationMessage != null) ...[
                     _PermissionNotice(
                       icon: Icons.location_off_rounded,
@@ -385,12 +387,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ],
               ),
             ),
+              ),
             const SizedBox(height: 12),
-            _SectionCard(
-              title: 'Reflection Before Class',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 80),
+              child: _SectionCard(
+                title: 'Reflection Before Class',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   _FormLabel(
                     label: 'Previous Class Topic',
                     child: TextFormField(
@@ -472,17 +477,21 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ],
               ),
             ),
+              ),
             const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: _submitting ? null : _submit,
-              icon: _submitting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save),
-              label: const Text('Submit Check-in'),
+            AnimatedEntry(
+              delay: const Duration(milliseconds: 140),
+              child: FilledButton.icon(
+                onPressed: _submitting ? null : _submit,
+                icon: _submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save),
+                label: const Text('Submit Check-in'),
+              ),
             ),
           ],
         ),

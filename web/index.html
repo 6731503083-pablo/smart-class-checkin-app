@@ -34,25 +34,43 @@
 </head>
 <body>
   <script>
-    // One-time cache reset after deploys to avoid stale UI from old service workers.
+    // Always clear old service worker caches so normal reload gets latest deploy.
     (async function () {
-      const resetKey = 'smart-class-cache-reset-v1';
+      const onceParam = 'cacheResetDone';
       try {
-        const alreadyReset = window.localStorage.getItem(resetKey) === 'done';
-        if (!alreadyReset) {
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map((registration) => registration.unregister()));
-          }
+        let hadOldCache = false;
 
-          if ('caches' in window) {
-            const cacheKeys = await caches.keys();
-            await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          if (registrations.length > 0) {
+            hadOldCache = true;
           }
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
 
-          window.localStorage.setItem(resetKey, 'done');
-          window.location.reload();
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          if (cacheKeys.length > 0) {
+            hadOldCache = true;
+          }
+          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const alreadyReloaded = params.get(onceParam) === '1';
+        if (hadOldCache && !alreadyReloaded) {
+          params.set(onceParam, '1');
+          const nextSearch = params.toString();
+          const nextUrl = window.location.pathname + (nextSearch.length === 0 ? '' : '?' + nextSearch);
+          window.location.replace(nextUrl + window.location.hash);
           return;
+        }
+
+        if (alreadyReloaded) {
+          params.delete(onceParam);
+          const cleanSearch = params.toString();
+          const cleanUrl = window.location.pathname + (cleanSearch.length === 0 ? '' : '?' + cleanSearch) + window.location.hash;
+          window.history.replaceState({}, '', cleanUrl);
         }
       } catch (_) {
         // If cache reset is not available, proceed with normal app boot.
