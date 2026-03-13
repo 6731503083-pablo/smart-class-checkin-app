@@ -380,27 +380,36 @@ class _FinishClassScreenState extends State<FinishClassScreen> {
     return _SectionCard(
       title: 'Reflection After Class',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
-            controller: _learnedTodayController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'What I learned today',
+          _FormLabel(
+            label: 'What I Learned Today',
+            child: TextFormField(
+              controller: _learnedTodayController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Summarize key learning from this class',
+                fillColor: Color(0xFFBFDBFE),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Required field'
+                  : null,
             ),
-            validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Required field'
-                : null,
           ),
           const SizedBox(height: 12),
-          TextFormField(
-            controller: _feedbackController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Class or instructor feedback',
+          _FormLabel(
+            label: 'Class or Instructor Feedback',
+            child: TextFormField(
+              controller: _feedbackController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Share feedback about class or teaching',
+                fillColor: Color(0xFFBFDBFE),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Required field'
+                  : null,
             ),
-            validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Required field'
-                : null,
           ),
         ],
       ),
@@ -475,6 +484,31 @@ class _SectionCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FormLabel extends StatelessWidget {
+  const _FormLabel({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
     );
   }
 }
